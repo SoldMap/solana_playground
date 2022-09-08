@@ -9,7 +9,6 @@ edition = "2018"
 poc-framework = { version = "0.2.0" }
 
 crowdfund = { path = "../crowdfund" }
-ctf = { path = "../ctf" }
 
 solana-program = "1.10.32"
 borsh = "0.9.1"

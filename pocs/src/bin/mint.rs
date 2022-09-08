@@ -29,15 +29,16 @@ pub fn main() {
     }
     .unwrap();
 
-    let fund_program_id = keypair(88).pubkey();
+    let crowd_funding_program_id = keypair(88).pubkey();
 
-    // writable 'fund account'. Here the state will be stored
-    let fund_account = keypair(0);
+    // writable 'Campaign account'. Here the Program State will be stored
+    let campaign_account = keypair(0);
 
-    // Program Derived Address. Derived from 'fund program ID' and 'fund account'
-    let fund_authority = authority_id(&fund_program_id, &fund_account.pubkey(), 99).unwrap();
+    // Program Derived Address. Derived from 'crowd_funding_program_id' and 'campaign_account'
+    let authority =
+        authority_id(&crowd_funding_program_id, &campaign_account.pubkey(), 99).unwrap();
 
-    // who creates the fund
+    // who creates the campaign
     let creator = keypair(10);
 
     // Token PID
@@ -47,10 +48,10 @@ pub fn main() {
     let fake_token = keypair(20);
 
     // ATA Account to collect and store fake USDC token's fees. Account is owned by 'PDA'
-    let fee_vault = get_associated_token_address(&fund_authority, &fake_token.pubkey());
+    let fee_vault = get_associated_token_address(&authority, &fake_token.pubkey());
 
-    // (a) Create Fund data
-    let fund_data = CampaignAccount {
+    // (a) Create Campaign data
+    let campaign_data = CampaignAccount {
         enabled: 0,
         nonce: 99,
         goal_amount: 100_000_000_000,
@@ -58,43 +59,43 @@ pub fn main() {
         fee_vault,
     };
 
-    // (b) Serialize this data in order to populate fund account with it
-    let mut writer_data: Vec<u8> = vec![];
-    fund_data.serialize(&mut writer_data).unwrap();
+    // (b) Serialize this data into bytes in order to populate Campaign Account with it
+    let mut bytes_data: Vec<u8> = vec![];
+    campaign_data.serialize(&mut bytes_data).unwrap();
 
     // Build the initial environment
     let mut env = LocalEnvironment::builder()
         // 1. deploy the Fund Program
-        .add_program(fund_program_id, path)
+        .add_program(crowd_funding_program_id, path)
         // 2. register 'creator account'
         .add_account_with_lamports(creator.pubkey(), system_program::ID, sol_to_lamports(10.0))
         // 3. register fund account and populate it with the above data
         .add_account_with_data(
-            fund_account.pubkey(),
-            fund_program_id,
-            writer_data.as_mut(),
+            campaign_account.pubkey(),
+            crowd_funding_program_id,
+            bytes_data.as_mut(),
             false,
         )
         // 4. register ATA with the fake USDC token's mint owned by 'creator account'
         .add_associated_account_with_tokens(creator.pubkey(), fake_token.pubkey(), fee_amount)
         // 5. register ATA with the fake USDC token's mint owned by 'PDA'
-        .add_associated_account_with_tokens(fund_authority, fake_token.pubkey(), fee_amount)
+        .add_associated_account_with_tokens(authority, fake_token.pubkey(), fee_amount)
         .build();
 
     // After the build phase, derive the address of ATA for fake USDC owned by 'creator account'
     let creator_token_account =
         get_associated_token_address(&creator.pubkey(), &fake_token.pubkey());
 
-    // Enable the Fund
+    // Call to the EnableCampaign instruction
     let tx_create = env.execute_as_transaction(
         &[ix_pay_enable_fee(
-            &fund_account.pubkey(),
-            &fund_authority,
+            &campaign_account.pubkey(),
+            &authority,
             &creator.pubkey(),
             &creator_token_account,
             &fee_vault,
             &token_program_id,
-            &fund_program_id,
+            &crowd_funding_program_id,
             fee_amount,
         )],
         &[&creator],
@@ -102,7 +103,7 @@ pub fn main() {
 
     // Print out the whole transaction on success
     assert_tx_success(tx_create).print();
-    println!("[*] Observe, that the fund is enabled using an arbitrary token mint");
+    println!("[*] Observe, that the campaign is enabled using an arbitrary token mint");
 }
 
 // Helper function

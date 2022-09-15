@@ -1,3 +1,5 @@
+// The blog post with the explanation is here - https://soldmap.xyz/?p=5894
+
 use solana_program::{
     native_token::sol_to_lamports,
     pubkey::{Pubkey, PubkeyError},

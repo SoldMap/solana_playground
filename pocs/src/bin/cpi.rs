@@ -1,3 +1,5 @@
+// the blog post with the explanation is here https://soldmap.xyz/?p=5891
+
 use solana_program::{
     pubkey::{Pubkey, PubkeyError},
     system_program,
@@ -118,6 +120,7 @@ fn build_env() -> (LocalEnvironment, Poc) {
     .unwrap();
 
     // Create accounts
+
     // 1. 'Crowd Fund Program ID'
     let crowd_funding_program_id = keypair(88).pubkey();
 
